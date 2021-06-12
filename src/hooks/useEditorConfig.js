@@ -2,12 +2,16 @@ import { DefaultElement } from "slate-react";
 import { useCallback } from "react"
 import isHotkey from "is-hotkey";
 import { toggleStyle } from "../utils/EditorUtils";
+import Link from "../components/Link" 
 
 export default function useEditorConfig(editor) {
   const onKeyDown = useCallback(
     (event) => KeyBindings.onKeyDown(editor, event),
     [editor]
   );
+
+  editor.isInline = (element) => ["link"].includes(element.type);
+
   return { renderElement, renderLeaf, onKeyDown };
 }
 
@@ -24,6 +28,8 @@ function renderElement(props) {
       return <h3 {...attributes}>{children}</h3>;
     case "h4":
       return <h4 {...attributes}>{children}</h4>;
+    case "link":
+      return <Link {...props}url={element.url}/>;
     default:
       return <DefaultElement {...props} />;
   }

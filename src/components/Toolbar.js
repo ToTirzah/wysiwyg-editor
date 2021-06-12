@@ -2,7 +2,16 @@ import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 
-import { getActiveStyles, toggleStyle } from "../utils/EditorUtils";
+import { useCallback } from "react";
+
+import {
+  getActiveStyles,
+  toggleStyle,
+  toggleBlockType,
+  getTextBlockStyle,
+  isLinkNodeAtSelection,
+  toggleLinkAtSelection
+} from "../utils/EditorUtils";
 import { useSlateStatic } from "slate-react";
 
 const PARAGRAPH_STYLES = ["h1", "h2", "h3", "h4", "paragraph", "multiple"];
@@ -10,13 +19,27 @@ const CHARACTER_STYLES = ["bold", "italic", "underline", "code"];
 
 export default function Toolbar({ selection, previousSelection }) {
   const editor = useSlateStatic();
+
+  const onBlockTypeChange = useCallback(
+    (targetType) => {
+      if (targetType === "multiple") {
+        return;
+      }
+      toggleBlockType(editor, targetType);
+    },
+    [editor]
+  );
+
+  const blockType = getTextBlockStyle(editor);
+
   return (
     <div className="toolbar">
       <DropdownButton
         className={"block-style-dropdown"}
-        disabled={false}
         id="block-style"
-        title={getLabelForBlockStyle("paragraph")}
+        disabled={blockType == null || blockType === ""}
+        title={getLabelForBlockStyle(blockType ?? "paragraph")}
+        onSelect={onBlockTypeChange}
       >
         {PARAGRAPH_STYLES.map((blockType) => (
           <Dropdown.Item eventKey={blockType} key={blockType}>
@@ -36,6 +59,11 @@ export default function Toolbar({ selection, previousSelection }) {
           }}
         />
       ))}
+      <ToolBarButton
+        isActive={isLinkNodeAtSelection(editor, editor.selection)}
+        label={<i className={`bi ${getIconForButton("link")}`} />}
+        onMouseDown={() => toggleLinkAtSelection(editor)}
+      />
     </div>
   );
 }
