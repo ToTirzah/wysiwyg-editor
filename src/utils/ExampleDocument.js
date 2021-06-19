@@ -24,6 +24,12 @@ const ExampleDocument = [
           { text: "Bold text inside link", bold: true },
         ],
       },
+      {
+        type: "image",
+        url: "/photos/puppy.jpg",
+        caption: "Puppy",
+        children: [{ text: "" }],
+      },
     ],
   },
 ];

@@ -1,10 +1,17 @@
 import { DefaultElement } from "slate-react";
-import { useCallback } from "react"
+import { useCallback } from "react";
 import isHotkey from "is-hotkey";
 import { toggleStyle } from "../utils/EditorUtils";
-import Link from "../components/Link" 
+import LinkEditor from "../components/LinkEditor"
+import Link from "../components/Link";
+import Image from "../components/Image"
+
 
 export default function useEditorConfig(editor) {
+  const { isVoid } = editor;
+  editor.isVoid = (element) => {
+    return ["image"].includes(element.type) || isVoid(element);
+  };
   const onKeyDown = useCallback(
     (event) => KeyBindings.onKeyDown(editor, event),
     [editor]
@@ -19,17 +26,21 @@ function renderElement(props) {
   const { element, children, attributes } = props;
   switch (element.type) {
     case "paragraph":
-      return <p {...attributes}>{children}</p>;
+      return <p {...attributes} content-editable={"true"}>{children}</p>;
     case "h1":
-      return <h1 {...attributes}>{children}</h1>;
+      return <h1 {...attributes} content-editable={"true"}>{children}</h1>;
     case "h2":
-      return <h2 {...attributes}>{children}</h2>;
+      return <h2 {...attributes} content-editable={"true"}>{children}</h2>;
     case "h3":
-      return <h3 {...attributes}>{children}</h3>;
+      return <h3 {...attributes} content-editable={"true"}>{children}</h3>;
     case "h4":
-      return <h4 {...attributes}>{children}</h4>;
+      return <h4 {...attributes} content-editable={"true"}>{children}</h4>;
     case "link":
       return <Link {...props}url={element.url}/>;
+    case "image":
+      return <Image {...props} />;
+    case "link-editor":
+      return <LinkEditor {...props} />;
     default:
       return <DefaultElement {...props} />;
   }

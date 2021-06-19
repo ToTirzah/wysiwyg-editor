@@ -30,6 +30,8 @@ export default function Toolbar({ selection, previousSelection }) {
     [editor]
   );
 
+  //const onImageSelected = useImageUploadHandler(editor, previousSelection);
+
   const blockType = getTextBlockStyle(editor);
 
   return (
@@ -63,6 +65,23 @@ export default function Toolbar({ selection, previousSelection }) {
         isActive={isLinkNodeAtSelection(editor, editor.selection)}
         label={<i className={`bi ${getIconForButton("link")}`} />}
         onMouseDown={() => toggleLinkAtSelection(editor)}
+      />
+      <ToolBarButton
+        isActive={false}
+        as={"label"}
+        htmlFor="image-upload"
+        label={
+          <>
+            <i className={`bi ${getIconForButton("image")}`} />
+            <input
+              type="file"
+              id="image-upload"
+              className="image-upload-input"
+              accept="image/png, image/jpeg"
+              //onChange={onImageSelected}
+            />
+          </>
+        }
       />
     </div>
   );
