@@ -1,4 +1,5 @@
-import { Editor, Transforms, Range, Element } from "slate";
+import { Editor, Transforms, Range, Element, Point, Text } from "slate";
+import isUrl from "is-url";
 
 export function getActiveStyles(editor) {
   return new Set(Object.keys(Editor.marks(editor) ?? {}));
@@ -66,8 +67,7 @@ export function isLinkNodeAtSelection(editor, selection) {
 
 export function toggleLinkAtSelection(editor) {
   if (!isLinkNodeAtSelection(editor, editor.selection)) {
-    const isSelectionCollapsed =
-      Range.isCollapsed(editor.selection);
+    const isSelectionCollapsed = Range.isCollapsed(editor.selection);
     if (isSelectionCollapsed) {
       Transforms.insertNodes(
         editor,
@@ -90,4 +90,80 @@ export function toggleLinkAtSelection(editor) {
       match: (n) => Element.isElement(n) && n.type === "link",
     });
   }
+}
+
+export function identifyLinksInTextIfAny(editor) {
+  if (editor.selection == null || !Range.isCollapsed(editor.selection)) {
+    return;
+  }
+
+  const [node] = Editor.parent(editor, editor.selection);
+  if (node.type === "link") {
+    return;
+  }
+
+  const [currentNode, currentNodePath] = Editor.node(editor, editor.selection);
+  if (!Text.isText(currentNode)) {
+    return;
+  }
+
+  let [start] = Range.edges(editor.selection);
+  const cursorPoint = start;
+
+  const startPointOfLastCharacter = Editor.before(editor, editor.selection, {
+    unit: "character",
+  });
+
+  let lastCharacter = Editor.string(
+    editor,
+    Editor.range(editor, startPointOfLastCharacter, cursorPoint)
+  );
+
+  if (lastCharacter !== " ") {
+    return;
+  }
+
+  let end = startPointOfLastCharacter;
+  start = Editor.before(editor, end, {
+    unit: "character",
+  });
+
+  const startOfTextNode = Editor.point(editor, currentNodePath, {
+    edge: "start",
+  });
+
+  lastCharacter = Editor.string(editor, Editor.range(editor, start, end));
+
+  while (lastCharacter !== " " && !Point.isBefore(start, startOfTextNode)) {
+    end = start;
+    start = Editor.before(editor, end, { unit: "character" });
+    lastCharacter = Editor.string(editor, Editor.range(editor, start, end));
+  }
+
+  const lastWordRange = Editor.range(editor, end, startPointOfLastCharacter);
+  const lastWord = Editor.string(editor, lastWordRange);
+
+  if (isUrl(lastWord)) {
+    Promise.resolve().then(() =>
+      createLinkForRange(editor, lastWordRange, lastWord, lastWord)
+    );
+  }
+}
+
+function createLinkForRange(editor, range, linkText, linkURL, isInsertion) {
+  isInsertion ?
+    Transforms.insertNodes(
+      editor,
+      {
+        type: "link",
+        url: linkURL,
+        children: [{ text: linkText }],
+      },
+      range != null ? { at: range } : undefined
+    ) :
+    Transforms.wrapNodes(
+      editor,
+      { type: "link", url: linkURL, children: [{ text: linkText }] },
+      { split: true, at: range }
+    );
 }

@@ -6,7 +6,7 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 
-import { isLinkNodeAtSelection } from "../utils/EditorUtils";
+import { isLinkNodeAtSelection, identifyLinksInTextIfAny } from "../utils/EditorUtils";
 
 import useEditorConfig from '../hooks/useEditorConfig';
 import useSelection from '../hooks/useSelection';
@@ -24,8 +24,9 @@ export default function Editor({ document, onChange }) {
     (document) => {
       onChange(document);
       setSelection(editor.selection);
+      identifyLinksInTextIfAny(editor);
     },
-    [editor.selection, onChange, setSelection]
+    [editor, onChange, setSelection]
   );
 
   let selectionForLink = null;
