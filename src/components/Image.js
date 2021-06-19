@@ -1,8 +1,13 @@
-import { useState, useCallback } from "react";
+import "./Image.css";
+
+import React, { useCallback, useState } from "react";
+
 import { Editor, Transforms } from "slate";
-import { useSlateStatic } from 'slate-react';
+import { useFocused, useSelected, useSlateStatic } from "slate-react";
+
 import Spinner from "react-bootstrap/Spinner";
 import Form from "react-bootstrap/Form";
+
 import classNames from "classnames";
 import isHotkey from "is-hotkey";
 
@@ -11,6 +16,9 @@ export default function Image({ attributes, children, element }) {
   const [isEditingCaption, setEditingCaption] = useState(false);
   const [caption, setCaption] = useState(element.caption);
   const editor = useSlateStatic();
+
+  const selected = useSelected();
+  const focused = useFocused();
 
   const applyCaptionChange = useCallback(
     (captionInput) => {
@@ -46,6 +54,7 @@ export default function Image({ attributes, children, element }) {
       if (!isHotkey("enter", event)) {
         return;
       }
+      event.preventDefault();
 
       applyCaptionChange(event.target.value);
       setEditingCaption(false);
@@ -67,6 +76,7 @@ export default function Image({ attributes, children, element }) {
       <div
         className={classNames({
           "image-container": true,
+          "is-selected": selected && focused,
         })}
       >
         {!element.isUploading && element.url != null ? (
@@ -76,29 +86,25 @@ export default function Image({ attributes, children, element }) {
             <Spinner animation="border" variant="dark" />
           </div>
         )}
-        {
-          isEditingCaption ? 
-            (
-              <Form.Control
-                autoFocus={true}
-                className={"image-caption-input"}
-                size="sm"
-                type="text"
-                defaultValue={element.caption}
-                onKeyDown={onKeyDown}
-                onChange={onCaptionChange}
-                onBlur={onToggleCaptionEditMode}
-              />
-            ) :
-            (
-              <div
-                className={"image-caption-read-mode"}
-                onClick={onToggleCaptionEditMode}
-              >
-                {caption}
-              </div>
-            )
-        }
+        {isEditingCaption ? (
+          <Form.Control
+            autoFocus={true}
+            className={"image-caption-input"}
+            size="sm"
+            type="text"
+            defaultValue={caption}
+            onKeyDown={onKeyDown}
+            onChange={onCaptionChange}
+            onBlur={onToggleCaptionEditMode}
+          />
+        ) : (
+          <div
+            className={"image-caption-read-mode"}
+            onClick={onToggleCaptionEditMode}
+          >
+            {element.caption}
+          </div>
+        )}
       </div>
       {children}
     </div>

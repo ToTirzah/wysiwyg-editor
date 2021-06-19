@@ -1,9 +1,10 @@
 const express = require("express");
-
-const app = express();
-const port = process.env.PORT || 5000;
 const multer = require("multer");
 const cors = require("cors");
+
+const port = process.env.PORT || 5000;
+
+const app = express();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

@@ -1,12 +1,15 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import "./LinkEditor.css";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
 import { Editor, Transforms } from "slate";
 import { ReactEditor, useSlateStatic } from "slate-react";
 
-import isUrl from "is-url";
-
-import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
+
+import isUrl from "is-url";
 
 
 export default function LinkEditor({ editorOffsets, selectionForLink }) {
@@ -30,7 +33,7 @@ export default function LinkEditor({ editorOffsets, selectionForLink }) {
   );
 
   const onApply = useCallback(
-    (event) => {
+    _ => {
       Transforms.setNodes(editor, { url: linkURL }, { at: path });
     },
     [editor, linkURL, path]
@@ -38,10 +41,10 @@ export default function LinkEditor({ editorOffsets, selectionForLink }) {
 
   useEffect(() => {
     const linkEditorEl = linkEditorRef.current;
-    if(linkEditorEl == null){
+    if (linkEditorEl == null) {
       return;
     }
-    
+
     const linkDOMNode = ReactEditor.toDOMNode(editor, linkNode);
     const {
       x: nodeX,
@@ -57,7 +60,7 @@ export default function LinkEditor({ editorOffsets, selectionForLink }) {
   if(editorOffsets == null) {
     return null;
   }
-  
+
   return (
     <Card className={"link-editor"} ref={linkEditorRef}>
       <Card.Body>
@@ -73,7 +76,9 @@ export default function LinkEditor({ editorOffsets, selectionForLink }) {
           variant="primary"
           disabled={!isUrl(linkURL)}
           onClick={onApply}
-        />
+        >
+          Apply
+        </Button>
       </Card.Body>
     </Card>
   );

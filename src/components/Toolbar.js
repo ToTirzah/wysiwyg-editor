@@ -1,21 +1,28 @@
+import "./Toolbar.css";
+
+import { useCallback } from "react";
+
+import { useSlateStatic } from "slate-react";
+
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 
-import { useCallback } from "react";
+import useImageUploadHandler from "../hooks/useImageUploadHandler";
 
 import {
   getActiveStyles,
-  toggleStyle,
-  toggleBlockType,
   getTextBlockStyle,
-  isLinkNodeAtSelection,
-  toggleLinkAtSelection
+  hasActiveLinkAtSelection,
+  toggleBlockType,
+  toggleLinkAtSelection,
+  toggleStyle,
 } from "../utils/EditorUtils";
-import { useSlateStatic } from "slate-react";
+
 
 const PARAGRAPH_STYLES = ["h1", "h2", "h3", "h4", "paragraph", "multiple"];
 const CHARACTER_STYLES = ["bold", "italic", "underline", "code"];
+
 
 export default function Toolbar({ selection, previousSelection }) {
   const editor = useSlateStatic();
@@ -30,16 +37,17 @@ export default function Toolbar({ selection, previousSelection }) {
     [editor]
   );
 
-  //const onImageSelected = useImageUploadHandler(editor, previousSelection);
+  const onImageSelected = useImageUploadHandler(editor, previousSelection);
 
   const blockType = getTextBlockStyle(editor);
 
   return (
     <div className="toolbar">
+      {/* Dropdown for paragraph styles */}
       <DropdownButton
         className={"block-style-dropdown"}
-        id="block-style"
         disabled={blockType == null || blockType === ""}
+        id="block-style"
         title={getLabelForBlockStyle(blockType ?? "paragraph")}
         onSelect={onBlockTypeChange}
       >
@@ -49,23 +57,21 @@ export default function Toolbar({ selection, previousSelection }) {
           </Dropdown.Item>
         ))}
       </DropdownButton>
+      {/* Buttons for character styles */}
       {CHARACTER_STYLES.map((style) => (
-        <ToolBarButton
+        <ToolBarStyleButton
           key={style}
-          characterStyle={style}
+          style={style}
           icon={<i className={`bi ${getIconForButton(style)}`} />}
-          isActive={getActiveStyles(editor).has(style)}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            toggleStyle(editor, style);
-          }}
         />
       ))}
+      {/* Link Button */}
       <ToolBarButton
-        isActive={isLinkNodeAtSelection(editor, editor.selection)}
+        isActive={hasActiveLinkAtSelection(editor)}
         label={<i className={`bi ${getIconForButton("link")}`} />}
         onMouseDown={() => toggleLinkAtSelection(editor)}
       />
+      {/* Image Upload Button */}
       <ToolBarButton
         isActive={false}
         as={"label"}
@@ -78,7 +84,7 @@ export default function Toolbar({ selection, previousSelection }) {
               id="image-upload"
               className="image-upload-input"
               accept="image/png, image/jpeg"
-              //onChange={onImageSelected}
+              onChange={onImageSelected}
             />
           </>
         }
@@ -87,8 +93,23 @@ export default function Toolbar({ selection, previousSelection }) {
   );
 }
 
+function ToolBarStyleButton({ as, style, icon }) {
+  const editor = useSlateStatic();
+  return (
+    <ToolBarButton
+      as={as}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        toggleStyle(editor, style);
+      }}
+      isActive={getActiveStyles(editor).has(style)}
+      label={icon}
+    />
+  );
+}
+
 function ToolBarButton(props) {
-  const { icon, isActive, ...otherProps } = props;
+  const { label, isActive, ...otherProps } = props;
   return (
     <Button
       variant="outline-primary"
@@ -96,7 +117,7 @@ function ToolBarButton(props) {
       active={isActive}
       {...otherProps}
     >
-      {icon}
+      {label}
     </Button>
   );
 }

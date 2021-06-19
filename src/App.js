@@ -1,7 +1,14 @@
-import { useState } from 'react';
-import Editor from './components/Editor';
-import ExampleDocument from './utils/ExampleDocument';
-import Navbar from 'react-bootstrap/Navbar'
+import "./App.css";
+
+import React, { useState } from "react";
+
+import Navbar from "react-bootstrap/Navbar";
+
+import ExampleDocument from "./utils/ExampleDocument";
+
+import Editor from "./components/Editor";
+
+
 
 function App() {
   const [document, updateDocument] = useState(ExampleDocument);

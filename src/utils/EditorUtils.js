@@ -1,17 +1,10 @@
-import { Editor, Transforms, Range, Element, Point, Text } from "slate";
+import { Editor, Element, Point, Range, Text, Transforms } from "slate";
+
 import isUrl from "is-url";
+
 
 export function getActiveStyles(editor) {
   return new Set(Object.keys(Editor.marks(editor) ?? {}));
-}
-
-export function toggleStyle(editor, style) {
-  const activeStyles = getActiveStyles(editor);
-  if (activeStyles.has(style)) {
-    Editor.removeMark(editor, style);
-  } else {
-    Editor.addMark(editor, style, true);
-  }
 }
 
 export function getTextBlockStyle(editor) {
@@ -29,7 +22,7 @@ export function getTextBlockStyle(editor) {
   let blockType = null;
   let nodeEntry = topLevelBlockNodesInSelection.next();
   while (!nodeEntry.done) {
-    const [node, _] = nodeEntry.value;
+    const [node] = nodeEntry.value;
     if (blockType == null) {
       blockType = node.type;
     } else if (blockType !== node.type) {
@@ -39,7 +32,16 @@ export function getTextBlockStyle(editor) {
     nodeEntry = topLevelBlockNodesInSelection.next();
   }
 
-  return blockType;
+  return blockType !== "image" ? blockType : null;
+}
+
+export function toggleStyle(editor, style) {
+  const activeStyles = getActiveStyles(editor);
+  if (activeStyles.has(style)) {
+    Editor.removeMark(editor, style);
+  } else {
+    Editor.addMark(editor, style, true);
+  }
 }
 
 export function toggleBlockType(editor, blockType) {
@@ -65,30 +67,27 @@ export function isLinkNodeAtSelection(editor, selection) {
   );
 }
 
+export function hasActiveLinkAtSelection(editor) {
+  return isLinkNodeAtSelection(editor, editor.selection);
+}
+
 export function toggleLinkAtSelection(editor) {
-  if (!isLinkNodeAtSelection(editor, editor.selection)) {
-    const isSelectionCollapsed = Range.isCollapsed(editor.selection);
-    if (isSelectionCollapsed) {
-      Transforms.insertNodes(
-        editor,
-        {
-          type: "link",
-          url: '#',
-          children: [{ text: 'link' }],
-        },
-        { at: editor.selection }
-      );
-    } else {
-      Transforms.wrapNodes(
-        editor,
-        { type: "link", url: '#', children: [{ text: '' }] },
-        { split: true, at: editor.selection }
-      );
-    }
-  } else {
+  if(editor.selection == null) {
+    return;
+  }
+  
+  if (hasActiveLinkAtSelection(editor)) {
     Transforms.unwrapNodes(editor, {
       match: (n) => Element.isElement(n) && n.type === "link",
     });
+  } else {
+    const isSelectionCollapsed =
+      editor.selection == null || Range.isCollapsed(editor.selection);
+    if (isSelectionCollapsed) {
+      createLinkForRange(editor, null, "link", "", true /*isInsertion*/);
+    } else {
+      createLinkForRange(editor, editor.selection, "", "");
+    }
   }
 }
 
